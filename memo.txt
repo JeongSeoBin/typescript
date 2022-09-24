@@ -1,0 +1,23 @@
+typescript 이용하는 목적
+-  코드에 의도를 담아서 누군가가 코드를 수정할때 하면 안된다는 의사표현을 하는 것
+-  컴파일 타임에 에러를 발생시켜 문제없이 코드를 작성하는 것
+
+typescript 설치
+npm i typescript -D
+- package.json에 devDependencies에 추가됨
+- 개발용으로 사용하는 모듈이라는 것을 명시할 수 있음
+- 런타임용 라이브러리와 구분할 수 있게 됨
+
+typescript compiler
+- vsCdoe 내에 typeScript 컴파일러가 내장되어 있다
+- 내장된 컴파일러 버전은 vsCode가 업데이트되면서 올라간다
+- 내장된 컴파일러를 선택할 수도 있고 직접 설치한 컴파일러를 선택할 수도 있다
+  typeScript파일 하단에 버전을 클릭 -> typeScript 버전 선택
+
+First Type Annotation
+예를 들어 변수선언 시
+- 타입 추론
+  변수 초기화 시 해당 데이터의 타입으로 타입을 결정
+  다른 타입의 데이터를 할당하면 에러 발생
+- 타입 지정
+  let var: String; -> var에는 String 타입의 데이터만 할당 가능

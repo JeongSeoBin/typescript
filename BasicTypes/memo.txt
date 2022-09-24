@@ -1,0 +1,50 @@
+# TypeScript type vs JavaScript type
+- typescript: static type
+              set during development
+  javaScript: dynamic type
+              resolved at runtime
+
+    function add(a, b){
+        if(typeof a !== 'number' || typeof b !== 'number ){ // runtime 시 타입 구분
+            throw new Error('incorrect input')
+        }
+        return a+b
+    }
+
+    function (a: number, b: number){ // 개발하면서 타입 구분가능
+        return a+b
+    }
+
+- typeScript는 javaScript에서 지원하는 타입과 동일하며 추가적인 타입이 존재한다
+  - javascript 기본 자료형
+    - boolean, number, string, null, undefined, symbol
+    - Array: Object형
+  - 추가 타입
+    - any, void, never, unknown
+    - enum
+    - tuple: Object형
+
+
+# Primitive type
+- object와 reference 형태가 아닌 실제 값을 저장하는 자료형
+- boolean, number, string, null, undefined, symbol
+- Primitive 형의 내장함수를 사용가능
+
+- literal 값으로 Primitive 타입의 서브타입을 나타낼 수 있다
+  true -> boolean의 서브타입(true false 중 하나)
+  'hi' -> string의 서브타입
+  3.14 -> number의 서브타입
+  null -> null의 서브타입
+  undefined -> undefined의 서브타입
+
+- reference객체로 만들 수 있다
+  new Boolean(false) // typeof new Boolean(false) : 'object'
+  new String('word')
+  new Number(23)
+
+  * typescript에서는 이러한 형태를 타입으로 사용하면 안된다
+    소문자 데이터 타입과 대문자 데이터 타입은 다른 것
+    소문자 데이터 타입은 primitive 타입이지만 대문자 데이터 타입은 reference 타입
+        
+    funtion func(param: Number){} (x)
+    function func(param: number){} (o)

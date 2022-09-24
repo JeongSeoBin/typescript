@@ -1,0 +1,477 @@
+# Compilation Context
+  - typeScript 파일들을 묶어 자바스크립트로 변환할때 어떤 typeScript 옵션을 사용할지 결정
+  - 어떤 파일을 컴파일할지 결정
+  - 즉 타입스크립트 컴파일러가 어떤 파일을 어떻게 컴파일할지를 규명한 맥락을 Compilation context라고 할 수 있다
+  - tscongig.json 파일에 이 맥락이 명시되어 있다
+
+# tsconfig.json
+  - tsconfig schema
+    http://json.schemastore.org/tsconfig
+    
+    - 최상위 프로퍼티
+      - compileOnSave
+      - extends
+      - compileOptions // 어떤 설정으로 컴파일할지 결정
+      ///////// 어떤 파일을 컴파일할지 결정 ////////
+      - files    
+      - include
+      - exclude
+      ///////////////////////////////////////////
+      - references
+      - typeAcquisition
+      - tsNode
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+* tsconfig.json에 각 옵션들 추가함
+
+# compileOnSave
+  - 파일을 save하면 컴파일한다는 설정
+  - true/false (defualt false)
+  - visual studio 2015 with typeScript 1.8.4 이상이거나 atom-typescript 플로그인을 설치한 경우에 가능
+  - schema
+   "compileOnSaveDefinition": {
+        "properties": {
+            "compileOnSave": {
+            "description": "Enable Compile-on-Save for this project.",
+            "type": "boolean"
+            }
+        }
+    },
+
+# extends
+- tsconfig.json파일도 다른 파일을 상속받아 추가하여 사용할 수 있다
+- 상속받아 올 부모 설정파일 경로 작성
+- typescript 버전 2.1이상
+- schema
+    "extendsDefinition": {
+      "properties": {
+        "extends": {
+          "description": "Path to base configuration file to inherit from. Requires TypeScript version 2.1 or later.",
+          "type": "string"
+        }
+      }
+    },
+
+# files, include, exclude
+- 어떤 파일을 컴파일할지 결정
+- 셋 다 설정이 없으면 컴파일러는 모든 파일을 컴파일하려고 한다
+- files: 파일의 경로가 담긴 배열
+         컴파일러는 해당 파일들을 컴파일한다
+         files에 담겼다면 exclude되어도 컴파일된다
+- exclude: glob patterns string 담긴 배열
+           컴파일러는 해당 파일들을 컴파일에 제외시킨다
+           include한 파일은 제외시킬 수 있지만 files에 담긴 파일은 제외시킬 수 없다
+           설정안하면 node_modules, bower_components, jspm_packages, <outDir>를 default로 제외
+           <outDir>은 항상 제외 (include에 있어도)
+           * <outDir>
+             컴파일한 결과를 특정 폴더에 저장하고 싶을때 설정
+             이미 컴파일한 파일들이 모인 것이므로 컴파일 대상에서 제외        
+- include: glob patterns string 담긴 배열
+           컴파일러는 해당 파일들을 컴파일에 포함시킨다
+           include해도 exclude되면 컴파일에서 제외된다
+           '*' 사용하면 .ts/.tsx/.d.ts만 include (js파일도 '*' 했을때 포함시키고 싶다면 compileOptions의 allowJs을 켜야한다)
+- schema
+   "filesDefinition": {
+      "properties": {
+        "files": {
+          "description": "If no 'files' or 'include' property is present in a tsconfig.json, the compiler defaults to including all files in the containing directory and subdirectories except those specified by 'exclude'. When a 'files' property is specified, only those files and those specified by 'include' are included.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "excludeDefinition": {
+      "properties": {
+        "exclude": {
+          "description": "Specifies a list of files to be excluded from compilation. The 'exclude' property only affects the files included via the 'include' property and not the 'files' property. Glob patterns require TypeScript version 2.0 or later.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "includeDefinition": {
+      "properties": {
+        "include": {
+          "description": "Specifies a list of glob patterns that match files to be included in compilation. If no 'files' or 'include' property is present in a tsconfig.json, the compiler defaults to including all files in the containing directory and subdirectories except those specified by 'exclude'. Requires TypeScript version 2.0 or later.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+# compileOptions
+어떤 설정으로 컴파일할지 결정
+
+- typeRoots, types
+  * @types
+    npm i --save-dev @types/react
+    @types/react: 외부 자바스크립트 라이브러리 typing을 도와주는 선언들을 패키지화시켜 사용할 수 있게 하는 기능
+    설치 후 생성되는 node_modules -> @types -> rect -> index.d.ts : react 라이브러리의 type defination
+
+  - types 혹은 typeRoots를 설정하지 않았을때
+    node_modules/@types의 모든 경로에서 type defination을 찾음
+  - typeRoots를 사용했을때
+    배열안에 들어있는 경로 아래에서만 type defination을 찾음
+    @types와 같은 파일을 여러개 쓰고 싶을때 배열에 폴더를 담는다
+    @types를 따르지 않은 라이브러리를 사용할때 사용할 수 있다
+  - types를 사용했을때
+    배열인의 모듈 혹은 ./node_modules/@types안의 모듈이름에서 type defination을 찾는다
+    빈 배열을 넣는건 이 시스템을 사용하지 않게다는 것이다
+  - typeRoots와 types는 같이 사용하지 않는다
+
+  - schema 
+    "typeRoots": {
+        "description": "Specify multiple folders that act like `./node_modules/@types`.",
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+            "type": "string"
+        },
+        "markdownDescription": "Specify multiple folders that act like `./node_modules/@types`.\n\nSee more: https://www.typescriptlang.org/tsconfig#typeRoots"
+    },
+    "types": {
+        "description": "Specify type package names to be included without being referenced in a source file.",
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+            "type": "string"
+        },
+        "markdownDescription": "Specify type package names to be included without being referenced in a source file.\n\nSee more: https://www.typescriptlang.org/tsconfig#types"
+    },
+  
+- target, lib
+  - target
+    빌드의 결과물을 어떤 버전으로 할것인가
+    예를 들어 브라우저라면 ES5, node.js라면 더 높은 버전으로 컴파일되도록 설정
+    지정안하면 es3
+  - lib
+    실행환경에 따라 기본 type defination 라이브러리를 어떤것을 사용할 것이냐
+    지정안하면
+        - target이 'es3'이면 default로 lib.d.ts를 사용
+        - target이 'es5'이면 default로 dom, es5, scripthost를 사용
+        - target이 'es6'이면 default로 dom, es6, dom.iterable, scripthost를 사용
+    lib을 지정하면 lib배열 라이브러리만 사용. 따라서 빈배열로 설정하면 'no defination..'
+
+  - schema
+    // Set the JavaScript language version for emitted JavaScript 
+    "target": {
+        "description": "Set the JavaScript language version for emitted JavaScript and include compatible library declarations.",
+        "type": "string",
+        "default": "ES3",
+        "anyOf": [
+            {
+                "enum": [
+                    "ES3",
+                    "ES5",
+                    "ES6",
+                    "ES2015",
+                    "ES2016",
+                    "ES2017",
+                    "ES2018",
+                    "ES2019",
+                    "ES2020",
+                    "ES2021",
+                    "ESNext"
+                ]
+            },
+            {
+                "pattern": "^([Ee][Ss]([356]|(20(1[56789]|2[01]))|[Nn][Ee][Xx][Tt]))$"
+            }
+        ],
+        "markdownDescription": "Set the JavaScript language version for emitted JavaScript and include compatible library declarations.\n\nSee more: https://www.typescriptlang.org/tsconfig#target"
+    },
+
+    "lib": {
+        "description": "Specify a set of bundled library declaration files that describe the target runtime environment.",
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+        "type": "string",
+        "anyOf": [
+            {
+                "enum": [
+                    "ES5",
+                    "ES6",
+                    "ES2015",
+                    "ES2015.Collection",
+                    "ES2015.Core",
+                    "ES2015.Generator",
+                    "ES2015.Iterable",
+                    "ES2015.Promise",
+                    "ES2015.Proxy",
+                    "ES2015.Reflect",
+                    "ES2015.Symbol.WellKnown",
+                    "ES2015.Symbol",
+                    "ES2016",
+                    "ES2016.Array.Include",
+                    "ES2017",
+                    "ES2017.Intl",
+                    "ES2017.Object",
+                    "ES2017.SharedMemory",
+                    "ES2017.String",
+                    "ES2017.TypedArrays",
+                    "ES2018",
+                    "ES2018.AsyncGenerator",
+                    "ES2018.AsyncIterable",
+                    "ES2018.Intl",
+                    "ES2018.Promise",
+                    "ES2018.Regexp",
+                    "ES2019",
+                    "ES2019.Array",
+                    "ES2019.Object",
+                    "ES2019.String",
+                    "ES2019.Symbol",
+                    "ES2020",
+                    "ES2020.BigInt",
+                    "ES2020.Promise",
+                    "ES2020.String",
+                    "ES2020.Symbol.WellKnown",
+                    "ESNext",
+                    "ESNext.Array",
+                    "ESNext.AsyncIterable",
+                    "ESNext.BigInt",
+                    "ESNext.Intl",
+                    "ESNext.Promise",
+                    "ESNext.String",
+                    "ESNext.Symbol",
+                    "DOM",
+                    "DOM.Iterable",
+                    "ScriptHost",
+                    "WebWorker",
+                    "WebWorker.ImportScripts",
+                    "Webworker.Iterable",
+                    "ES7",
+                    "ES2021",
+                    "ES2020.SharedMemory",
+                    "ES2020.Intl",
+                    "ES2021.Promise",
+                    "ES2021.String",
+                    "ES2021.WeakRef",
+                    "ESNext.WeakRef",
+                    "es2021.intl"
+                ]
+            },
+            {
+                "pattern": "^[Ee][Ss]5|[Ee][Ss]6|[Ee][Ss]7$"
+            },
+            {
+                "pattern": "^[Ee][Ss]2015(\\.([Cc][Oo][Ll][Ll][Ee][Cc][Tt][Ii][Oo][Nn]|[Cc][Oo][Rr][Ee]|[Gg][Ee][Nn][Ee][Rr][Aa][Tt][Oo][Rr]|[Ii][Tt][Ee][Rr][Aa][Bb][Ll][Ee]|[Pp][Rr][Oo][Mm][Ii][Ss][Ee]|[Pp][Rr][Oo][Xx][Yy]|[Rr][Ee][Ff][Ll][Ee][Cc][Tt]|[Ss][Yy][Mm][Bb][Oo][Ll].[Ww][Ee][Ll][Ll][Kk][Nn][Oo][Ww][Nn]|[Ss][Yy][Mm][Bb][Oo][Ll]))?$"
+            },
+            {
+                "pattern": "^[Ee][Ss]2016(\\.[Aa][Rr][Rr][Aa][Yy].[Ii][Nn][Cc][Ll][Uu][Dd][Ee])?$"
+            },
+            {
+                "pattern": "^[Ee][Ss]2017(\\.([Ii][Nn][Tt][Ll]|[Oo][Bb][Jj][Ee][Cc][Tt]|[Ss][Hh][Aa][Rr][Ee][Dd][Mm][Ee][Mm][Oo][Rr][Yy]|[Ss][Tt][Rr][Ii][Nn][Gg]|[Tt][Yy][Pp][Ee][Dd][Aa][Rr][Rr][Aa][Yy][Ss]))?$"
+            },
+            {
+                "pattern": "^[Ee][Ss]2018(\\.([Aa][Ss][Yy][Nn][Cc][Ii][Tt][Ee][Rr][Aa][Bb][Ll][Ee]|[Ii][Nn][Tt][Ll]|[Pp][Rr][Oo][Mm][Ii][Ss][Ee]|[Rr][Ee][Gg][Ee][Xx][Pp]))?$"
+            },
+            {
+                "pattern": "^[Ee][Ss]2019(\\.([Aa][Rr][Rr][Aa][Yy]|[Oo][Bb][Jj][Ee][Cc][Tt]|[Ss][Tt][Rr][Ii][Nn][Gg]|[Ss][Yy][Mm][Bb][Oo][Ll]))?$"
+            },
+            {
+                "pattern": "^[Ee][Ss]2020(\\.([Bb][Ii][Gg][Ii][Nn][Tt]|[Pp][Rr][Oo][Mm][Ii][Ss][Ee]|[Ss][Tt][Rr][Ii][Nn][Gg]|[Ss][Yy][Mm][Bb][Oo][Ll].[Ww][Ee][Ll][Ll][Kk][Nn][Oo][Ww][Nn]))?$"
+            },
+            {
+                "pattern": "^[Ee][Ss]2021(\\.([Ii][Nn][Tt][Ll]|[Pp][Rr][Oo][Mm][Ii][Ss][Ee]|[Ss][Tt][Rr][Ii][Nn][Gg]|[Ww][Ee][Aa][Kk][Rr][Ee][Ff]))?$"
+            },
+            {
+                "pattern": "^[Ee][Ss][Nn][Ee][Xx][Tt](\\.([Aa][Rr][Rr][Aa][Yy]|[Aa][Ss][Yy][Nn][Cc][Ii][Tt][Ee][Rr][Aa][Bb][Ll][Ee]|[Bb][Ii][Gg][Ii][Nn][Tt]|[Ii][Nn][Tt][Ll]|[Pp][Rr][Oo][Mm][Ii][Ss][Ee]|[Ss][Tt][Rr][Ii][Nn][Gg]|[Ss][Yy][Mm][Bb][Oo][Ll]|[Ww][Ee][Aa][Kk][Rr][Ee][Ff]))?$"
+            },
+            {
+                "pattern": "^[Dd][Oo][Mm](\\.[Ii][Tt][Ee][Rr][Aa][Bb][Ll][Ee])?$"
+            },
+            {
+                "pattern": "^[Ss][Cc][Rr][Ii][Pp][Tt][Hh][Oo][Ss][Tt]$"
+            },
+            {
+                "pattern": "^[Ww][Ee][Bb][Ww][Oo][Rr][Kk][Ee][Rr](\\.[Ii][Mm][Pp][Oo][Rr][Tt][Ss][Cc][Rr][Ii][Pp][Tt][Ss])?$"
+            }
+        ]
+        },
+        "markdownDescription": "Specify a set of bundled library declaration files that describe the target runtime environment.\n\nSee more: https://www.typescriptlang.org/tsconfig#lib"
+    },
+- outDir, outFile, rootDir
+  - outFile
+    모든 전역 파일(non-module)을 하나의 output file로 합친다
+    모듈이 system이거나 amd일 경우 모든 모둘 파일도 하나의 파일로 합쳐진다
+    이 옵션은 CommonJS 또는 ES6 module을 합칠 수는 없다
+  - outDir
+    컴파일하고자하는 영역을 그대로 outDir에 지정된 폴더에 생성
+    컴파일한 파일들을 특정 폴더에 모아 둘 수 있다
+  - rootDir
+    source들의 root폴더를 rootDir로 지정하면 해당 rootDir을 그대로 outDir에 지정한 폴더에 컴파일 파일들을 모은다
+    rootDir을 설정하지 않으면 files, include, exclude로 포함한 파일의 최상위 폴더를 root로 잡는다
+
+  - schema
+        "outFile": {
+            "description": "Specify a file that bundles all outputs into one JavaScript file. If `declaration` is true, also designates a file that bundles all .d.ts output.",
+            "type": "string",
+            "markdownDescription": "Specify a file that bundles all outputs into one JavaScript file. If `declaration` is true, also designates a file that bundles all .d.ts output.\n\nSee more: https://www.typescriptlang.org/tsconfig#outFile"
+        },
+        "outDir": {
+            "description": "Specify an output folder for all emitted files.",
+            "type": "string",
+            "markdownDescription": "Specify an output folder for all emitted files.\n\nSee more: https://www.typescriptlang.org/tsconfig#outDir"
+        },
+        "rootDir": {
+            "description": "Specify the root folder within your source files.",
+            "type": "string",
+            "markdownDescription": "Specify the root folder within your source files.\n\nSee more: https://www.typescriptlang.org/tsconfig#rootDir"
+        },
+  
+- strict
+  strict를 true로 설정하는건 기본
+  엄격한 type checking 옵션을 모두 활성화
+    - noImplicitAny 
+      표현식과 선언에서 타입을 명시하지 않아 any타입으로 추론되면 에러를 발생시킨다
+
+      - suppressImplicitAnyIndexErrors
+        noImplicitAny사용할때, 인덱스 객체에 인덱스 signature가 없는 경우 오류가 발생하는데 이를 예외처리합니다
+
+        let obj = {
+            bar: 1
+        }
+        obj['foo'] = 10; // error: Index siginiture of object type implicitly has an any type
+        obj['bar'] = 10;
+        obj.baz = 10 // error
+
+        위와 같은 상황에서는 에러 발생하지 않게 함
+
+    - noImplicitThis
+      명시적이지 않게 any타입을 사용하여 this 표현식에 사용하면 에러를 발생시킨다
+
+      //////////////////////////////////////////////////////////////////////////////////////////
+      * https://wooooooak.github.io/javascript/2018/12/08/call,apply,bind/ (call apply bind)
+
+      function func(name: string, age: number){
+          // call, apply, bind를 통해 this를 binding 할때 this의 타입을 지정하지 않으면
+          // this에 들어 올 수있는 타입이 불명확하여 에러를 발생시킨다
+          this.name = name;
+          this.age = age;
+          return this;
+      }
+
+      func.call({height: 160}, 'Mark', 36);
+      func.apply({height: 160}, ['Mark', 36]);
+      func.bind({height: 160})('Mark', 36));
+
+      수정)
+
+      첫번째 매개변수 자리에 this를 놓고 this에 대한 타입을 지정안하면 noImplicitAvy 에러발생
+      자바스크립트에서는 매개변수에 this를 놓은면 이미 예약된 키워드라 SyntaxError발생
+      call/apply/bind와 같이 this를 대체하여 함수를 콜하는 용도로도 쓰인다
+      this를 any로 지정하는 것은 합리적이다 (구체적인 사용처가 있는 경우 타입을 지정해도 됨)
+
+      function func(this: type, name: string, age: number){
+          this.name = name;
+          this.age = age;
+          return this;
+      }
+      ////////////////////////////////////////////////////////////////////////////////////////
+
+      클래스에서 constructor를 제외한 멤버 함수의 첫번째 매개변수도 일반함수와 마찬가지로 this를 사용할 수 있다
+      (constructor는 첫번째 매개변수에 this를사용할 수 없습니다)
+      이때, 클래스에서 this를 사용할때는 noImplicitThis와 관련한 에러가 발생하지 않는다
+
+      class myClass {
+          private _name: string;
+          private _age: number;
+
+          constructor(name: string, age: number) {
+              this._name = name;
+              this._age = age;
+          }
+
+          public print(this: myClass) {
+              console.log(this._name, this._age);
+          }
+      }
+      new myClass('Mark', 35).print();
+
+    - strictNullChecks
+      true일 경우, null 및 undefined 값이 자신 타입 혹은 any 타입에만 할당 가능하고 다른 타입에게는 할당될 수 없다
+      (단, void타입인 경우 undefined를 가질 수 있다)
+
+      특정 타입에서 null 혹은 undefined값을 가지려면 union type을 이용해야 한다
+      이 경우 해당 값을 조건부로 제외하고 사용할 것
+
+      함수 작성 시, 이 옵션을 이용한면 매개변수와  리턴 타입을 정확히 지정할 수 있다
+
+    - strictFunctionTypes
+      함수에서 인자로 다른 함수를 받을 때 함수의 타입이 맞는지 검사할때
+      매개변수는 같거나 상위, 리턴타입은 같거나 하위( 반환타입은 공벽전(covariant), 인자타입은 반공변적(contravariant) )
+      * 공변: 타입이 같거나 서브타입인 경우 할당이 가능  반병: 함수의 매개변수 타입만 같거나 슈퍼타입인 경우 할당이 가능
+
+      타입스크립트에서 인자타입은 공변적이면서 반공변적인게 문제
+      -> 옵션을 켜면 인자 타입은 반공변적인 것만 가능
+
+    - strictPropertyInitialization
+      정의되지 않은 클래스의 속성이 생성자에서 초기화되었는 확인하여 에러 발생
+      입 옵션을 사용하려면 strictNullChecks도 사용하도록 설정해야 함
+
+      class Person {
+        private _name: string;
+        private _age: number;
+
+        // 클래스 속성이 선언만 되어 있고 생성자 내에서 초기화되지 않았다
+        // 이때 strictPropertyInitialization에서 에러를 발생시킨다
+        constructor(name:string, age: number) {
+          // 에러 제거
+          this._name = name,
+          this._age = age
+        }
+
+        pulbic print() {
+          console.log(this._name, this._age);
+        }
+      }
+
+      //////////////////////////////////////////////////////////////////////////
+
+      class Person {
+        // 외부에서 이 함수를 호출하여 할당하는 경우 클래스 내부에서는 속성이 정말 할당되었는지 보장할 수 없다
+        // -> '!': 어디선가 할당할것이니 에러를 무시해줘
+        private _name!: string;
+        private _age!: number;
+
+        // constructor을 사용하지 않은 경우 (비동기적으로 할당하는 경우)
+        // constructor에서는 async를 사용할 수 없기 때문에 async함수를 만들고 호출하여 속성들을 초기화한다
+        public async initialize(name: string, ageL number) {
+          this._name = name;
+          this._age = age;
+        }
+
+        pulbic print() {
+          console.log(this._name, this._age);
+        }
+      }
+
+    - strictBindCallApply
+      bind, call, apply에 대해 더 엄격한 검사 
+      this에 대해 엄격히 검사
+
+    - alwaysStrict
+      각 소스파일에 대해서 javascript의 strict mode로 코드를 분석
+      이 옵션을 켜고 컴파일하면 컴파일된 js파일에 'use strict'가 추가됨
+
+  - schema
+    "strict": {
+        "description": "Enable all strict type checking options.",
+        "type": "boolean",
+        "default": false,
+        "markdownDescription": "Enable all strict type checking options.\n\nSee more: https://www.typescriptlang.org/tsconfig#strict"
+    },
+
+  
+
+
